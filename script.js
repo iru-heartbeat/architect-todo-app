@@ -168,6 +168,11 @@
     listFiltered: document.getElementById("list-filtered"),
     filterResultCount: document.getElementById("filter-result-count"),
     emptyHintFiltered: document.getElementById("empty-hint-filtered"),
+    calendarLabel: document.getElementById("calendar-label"),
+    calendarGrid: document.getElementById("calendar-grid"),
+    calendarSelectedLabel: document.getElementById("calendar-selected-label"),
+    calendarTaskList: document.getElementById("calendar-task-list"),
+    calendarEmptyHint: document.getElementById("calendar-empty-hint"),
   };
 
   function buildTaskMenu(items) {
@@ -332,6 +337,101 @@
     els.emptyHintCompleted.hidden = completed.length !== 0;
   }
 
+  // ===== Calendar =====
+
+  const calendarState = {
+    year: new Date().getFullYear(),
+    month: new Date().getMonth(), // 0-11
+    selected: todayStr(),
+  };
+
+  function daysInMonth(year, month) {
+    return new Date(year, month + 1, 0).getDate();
+  }
+
+  function firstWeekdayOfMonth(year, month) {
+    return new Date(year, month, 1).getDay();
+  }
+
+  function buildCalendarGrid() {
+    const { year, month, selected } = calendarState;
+    const today = todayStr();
+    const totalDays = daysInMonth(year, month);
+    const startWeekday = firstWeekdayOfMonth(year, month);
+    const totalCells = Math.ceil((startWeekday + totalDays) / 7) * 7;
+
+    els.calendarGrid.innerHTML = "";
+    for (let i = 0; i < totalCells; i++) {
+      const dayNum = i - startWeekday + 1;
+      const cell = document.createElement("button");
+      cell.type = "button";
+      cell.className = "calendar-cell";
+
+      if (dayNum < 1 || dayNum > totalDays) {
+        cell.classList.add("calendar-cell-empty");
+        cell.disabled = true;
+        els.calendarGrid.appendChild(cell);
+        continue;
+      }
+
+      const dateStr = `${year}-${pad2(month + 1)}-${pad2(dayNum)}`;
+      cell.dataset.date = dateStr;
+      if (dateStr === today) cell.classList.add("is-today");
+      if (dateStr === selected) cell.classList.add("is-selected");
+
+      const num = document.createElement("span");
+      num.className = "calendar-day-num";
+      num.textContent = String(dayNum);
+      cell.appendChild(num);
+
+      const dayTasks = state.tasks.filter((t) => t.dueDate === dateStr);
+      if (dayTasks.length) {
+        const dot = document.createElement("span");
+        dot.className = "calendar-dot";
+        if (dayTasks.some((t) => !t.completed)) dot.classList.add("has-active");
+        cell.appendChild(dot);
+      }
+
+      els.calendarGrid.appendChild(cell);
+    }
+  }
+
+  function renderCalendarDayTasks() {
+    const dateStr = calendarState.selected;
+    const [, m, d] = dateStr.split("-");
+    els.calendarSelectedLabel.textContent = `${Number(m)}月${Number(d)}日のタスク`;
+
+    const dayTasks = state.tasks.filter((t) => t.dueDate === dateStr).sort(compareFiltered);
+    els.calendarTaskList.innerHTML = "";
+    dayTasks.forEach((t) => {
+      els.calendarTaskList.appendChild(
+        t.completed ? buildCompletedItem(t) : buildTaskItem(t, todayStr(), endOfWeekStr())
+      );
+    });
+    els.calendarEmptyHint.hidden = dayTasks.length !== 0;
+  }
+
+  function renderCalendar() {
+    els.calendarLabel.textContent = `${calendarState.year}年${calendarState.month + 1}月`;
+    buildCalendarGrid();
+    renderCalendarDayTasks();
+  }
+
+  function shiftCalendarMonth(delta) {
+    let month = calendarState.month + delta;
+    let year = calendarState.year;
+    if (month < 0) {
+      month = 11;
+      year -= 1;
+    } else if (month > 11) {
+      month = 0;
+      year += 1;
+    }
+    calendarState.month = month;
+    calendarState.year = year;
+    renderCalendar();
+  }
+
   function render() {
     const today = todayStr();
     const endOfWeek = endOfWeekStr();
@@ -356,6 +456,7 @@
     }
 
     renderCompletedList();
+    renderCalendar();
   }
 
   // ===== Toast =====
@@ -422,17 +523,22 @@
 
   const viewToday = document.getElementById("view-today");
   const viewCompleted = document.getElementById("view-completed");
+  const viewCalendar = document.getElementById("view-calendar");
   const navToday = document.getElementById("nav-today");
   const navCompleted = document.getElementById("nav-completed");
+  const navCalendar = document.getElementById("nav-calendar");
   const pageTitle = document.getElementById("page-title");
 
+  const VIEW_TITLES = { today: "やることリスト", completed: "完了済みタスク", calendar: "カレンダー" };
+
   function showView(name) {
-    const isToday = name === "today";
-    viewToday.hidden = !isToday;
-    viewCompleted.hidden = isToday;
-    navToday.classList.toggle("active", isToday);
-    navCompleted.classList.toggle("active", !isToday);
-    pageTitle.textContent = isToday ? "やることリスト" : "完了済みタスク";
+    viewToday.hidden = name !== "today";
+    viewCompleted.hidden = name !== "completed";
+    viewCalendar.hidden = name !== "calendar";
+    navToday.classList.toggle("active", name === "today");
+    navCompleted.classList.toggle("active", name === "completed");
+    navCalendar.classList.toggle("active", name === "calendar");
+    pageTitle.textContent = VIEW_TITLES[name];
   }
 
   const addSheet = document.getElementById("add-sheet");
@@ -478,6 +584,7 @@
 
   navToday.addEventListener("click", () => showView("today"));
   navCompleted.addEventListener("click", () => showView("completed"));
+  navCalendar.addEventListener("click", () => showView("calendar"));
 
   document.getElementById("fab-add").addEventListener("click", openAddSheet);
   document.getElementById("cancel-add").addEventListener("click", closeAddSheet);
@@ -544,8 +651,26 @@
     }
   }
 
-  [els.listToday, els.listThisWeek, els.listLater, els.listCompleted, els.listFiltered].forEach((list) => {
-    list.addEventListener("click", handleTaskListClick);
+  [els.listToday, els.listThisWeek, els.listLater, els.listCompleted, els.listFiltered, els.calendarTaskList].forEach(
+    (list) => {
+      list.addEventListener("click", handleTaskListClick);
+    }
+  );
+
+  document.getElementById("calendar-prev").addEventListener("click", () => shiftCalendarMonth(-1));
+  document.getElementById("calendar-next").addEventListener("click", () => shiftCalendarMonth(1));
+  document.getElementById("calendar-today-btn").addEventListener("click", () => {
+    const now = new Date();
+    calendarState.year = now.getFullYear();
+    calendarState.month = now.getMonth();
+    calendarState.selected = todayStr();
+    renderCalendar();
+  });
+  els.calendarGrid.addEventListener("click", (e) => {
+    const cell = e.target.closest(".calendar-cell[data-date]");
+    if (!cell) return;
+    calendarState.selected = cell.dataset.date;
+    renderCalendar();
   });
 
   els.searchInput.addEventListener("input", render);
