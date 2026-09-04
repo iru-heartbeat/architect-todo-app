@@ -27,6 +27,14 @@
         <option value="thisWeek">今週</option>
         <option value="later">今週以降</option>
       </select>
+      <select id="filter-category" class="filter-select">
+        <option value="all" selected>すべてのカテゴリ</option>
+        <option value="onsite">現地調査</option>
+        <option value="drawing">図面</option>
+        <option value="client">施主連絡</option>
+        <option value="order">発注</option>
+        <option value="unclassified">未分類</option>
+      </select>
       <button type="button" id="clear-filters" class="clear-filters-btn" hidden>クリア</button>
     </div>
   </div>
@@ -87,6 +95,15 @@
             <option value="low">低</option>
           </select>
         </label>
+        <label class="field-label">カテゴリ（任意）
+          <select id="input-category">
+            <option value="">未分類</option>
+            <option value="onsite">現地調査</option>
+            <option value="drawing">図面</option>
+            <option value="client">施主連絡</option>
+            <option value="order">発注</option>
+          </select>
+        </label>
       </div>
 
       <div class="sheet-actions">
@@ -113,6 +130,15 @@
             <option value="high">高</option>
             <option value="mid">中</option>
             <option value="low">低</option>
+          </select>
+        </label>
+        <label class="field-label">カテゴリ（任意）
+          <select id="edit-category">
+            <option value="">未分類</option>
+            <option value="onsite">現地調査</option>
+            <option value="drawing">図面</option>
+            <option value="client">施主連絡</option>
+            <option value="order">発注</option>
           </select>
         </label>
       </div>

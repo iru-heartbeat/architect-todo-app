@@ -86,6 +86,7 @@
 
   const PRIORITY_LABEL = { high: "優先度:高", mid: "優先度:中", low: "優先度:低" };
   const PRIORITY_RANK = { high: 0, mid: 1, low: 2, "": 3 };
+  const CATEGORY_LABEL = { onsite: "現地調査", drawing: "図面", client: "施主連絡", order: "発注" };
 
   // ===== Sorting =====
 
@@ -119,17 +120,27 @@
       keyword: els.searchInput.value.trim(),
       status: els.filterStatus.value, // "active" | "completed" | "all"
       period: els.filterPeriod.value, // "all" | "today" | "thisWeek" | "later"
+      category: els.filterCategory.value, // "all" | "unclassified" | "onsite" | "drawing" | "client" | "order"
     };
   }
 
   function isDefaultFilter(filters) {
-    return filters.keyword === "" && filters.status === "active" && filters.period === "all";
+    return (
+      filters.keyword === "" &&
+      filters.status === "active" &&
+      filters.period === "all" &&
+      filters.category === "all"
+    );
   }
 
   function taskMatchesFilters(task, filters, today, endOfWeek) {
     if (filters.status === "active" && task.completed) return false;
     if (filters.status === "completed" && !task.completed) return false;
     if (filters.period !== "all" && sectionForTask(task, today, endOfWeek) !== filters.period) return false;
+    if (filters.category !== "all") {
+      const category = task.category || "";
+      if (filters.category === "unclassified" ? category !== "" : category !== filters.category) return false;
+    }
     if (filters.keyword && !task.title.toLowerCase().includes(filters.keyword.toLowerCase())) return false;
     return true;
   }
@@ -152,6 +163,7 @@
     searchInput: document.getElementById("search-input"),
     filterStatus: document.getElementById("filter-status"),
     filterPeriod: document.getElementById("filter-period"),
+    filterCategory: document.getElementById("filter-category"),
     clearFiltersBtn: document.getElementById("clear-filters"),
     listFiltered: document.getElementById("list-filtered"),
     filterResultCount: document.getElementById("filter-result-count"),
@@ -205,7 +217,7 @@
     main.appendChild(title);
 
     const badge = dueBadge(task, today, endOfWeek);
-    if (badge || task.priority) {
+    if (badge || task.priority || task.category) {
       const meta = document.createElement("div");
       meta.className = "task-meta";
       if (badge) {
@@ -218,6 +230,12 @@
         const b = document.createElement("span");
         b.className = `badge priority-${task.priority}`;
         b.textContent = PRIORITY_LABEL[task.priority];
+        meta.appendChild(b);
+      }
+      if (task.category) {
+        const b = document.createElement("span");
+        b.className = "badge category";
+        b.textContent = CATEGORY_LABEL[task.category] || task.category;
         meta.appendChild(b);
       }
       main.appendChild(meta);
@@ -422,6 +440,7 @@
   const inputTitle = document.getElementById("input-title");
   const inputDue = document.getElementById("input-due");
   const inputPriority = document.getElementById("input-priority");
+  const inputCategory = document.getElementById("input-category");
 
   function openAddSheet() {
     addForm.reset();
@@ -438,6 +457,7 @@
   const editTitle = document.getElementById("edit-title");
   const editDue = document.getElementById("edit-due");
   const editPriority = document.getElementById("edit-priority");
+  const editCategory = document.getElementById("edit-category");
   let editingTaskId = null;
 
   function openEditSheet(task) {
@@ -445,6 +465,7 @@
     editTitle.value = task.title;
     editDue.value = task.dueDate || "";
     editPriority.value = task.priority || "";
+    editCategory.value = task.category || "";
     editSheet.hidden = false;
   }
 
@@ -470,6 +491,7 @@
       title,
       dueDate: inputDue.value || null,
       priority: inputPriority.value || "",
+      category: inputCategory.value || "",
       completed: false,
       createdAt: Date.now(),
       completedAt: null,
@@ -490,6 +512,7 @@
       task.title = title;
       task.dueDate = editDue.value || null;
       task.priority = editPriority.value || "";
+      task.category = editCategory.value || "";
       saveState();
       showToast("変更しました");
     }
@@ -528,10 +551,12 @@
   els.searchInput.addEventListener("input", render);
   els.filterStatus.addEventListener("change", render);
   els.filterPeriod.addEventListener("change", render);
+  els.filterCategory.addEventListener("change", render);
   els.clearFiltersBtn.addEventListener("click", () => {
     els.searchInput.value = "";
     els.filterStatus.value = "active";
     els.filterPeriod.value = "all";
+    els.filterCategory.value = "all";
     render();
   });
 
