@@ -66,11 +66,37 @@
   <p class="empty-hint" id="empty-hint-completed" hidden>完了したタスクはまだありません。</p>
 </main>
 
+<main id="view-calendar" class="view" hidden>
+  <div class="calendar-header">
+    <button type="button" id="calendar-prev" class="calendar-nav-btn" aria-label="前の月">‹</button>
+    <div class="calendar-header-center">
+      <h2 class="calendar-label" id="calendar-label"></h2>
+      <button type="button" id="calendar-today-btn" class="calendar-today-btn">今日</button>
+    </div>
+    <button type="button" id="calendar-next" class="calendar-nav-btn" aria-label="次の月">›</button>
+  </div>
+
+  <div class="calendar-weekdays">
+    <span>日</span><span>月</span><span>火</span><span>水</span><span>木</span><span>金</span><span>土</span>
+  </div>
+
+  <div class="calendar-grid" id="calendar-grid"></div>
+
+  <section class="calendar-day-section">
+    <h3 class="calendar-day-title" id="calendar-selected-label"></h3>
+    <ul class="task-list" id="calendar-task-list"></ul>
+    <p class="empty-hint" id="calendar-empty-hint" hidden>この日のタスクはありません。</p>
+  </section>
+</main>
+
 <button id="fab-add" class="fab" aria-label="タスクを追加">＋</button>
 
 <nav class="bottom-nav">
   <button class="nav-btn active" id="nav-today" data-view="today">
     <span class="nav-icon">📋</span><span>タスク</span>
+  </button>
+  <button class="nav-btn" id="nav-calendar" data-view="calendar">
+    <span class="nav-icon">📅</span><span>カレンダー</span>
   </button>
   <button class="nav-btn" id="nav-completed" data-view="completed">
     <span class="nav-icon">✅</span><span>完了済み</span>
