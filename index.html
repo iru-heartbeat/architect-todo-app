@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>タスク管理</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<header class="app-header">
+  <h1 id="page-title">やることリスト</h1>
+</header>
+
+<main id="view-today" class="view">
+  <section class="task-section" data-section="today">
+    <h2 class="section-title today">今日 <span class="count" id="count-today"></span></h2>
+    <ul class="task-list" id="list-today"></ul>
+  </section>
+
+  <section class="task-section" data-section="thisWeek">
+    <h2 class="section-title thisweek">今週 <span class="count" id="count-thisWeek"></span></h2>
+    <ul class="task-list" id="list-thisWeek"></ul>
+  </section>
+
+  <section class="task-section" data-section="later">
+    <h2 class="section-title later">今週以降 <span class="count" id="count-later"></span></h2>
+    <ul class="task-list" id="list-later"></ul>
+  </section>
+
+  <p class="empty-hint" id="empty-hint" hidden>タスクはありません。右下の「＋」から追加しましょう。</p>
+</main>
+
+<main id="view-completed" class="view" hidden>
+  <ul class="task-list" id="list-completed"></ul>
+  <p class="empty-hint" id="empty-hint-completed" hidden>完了したタスクはまだありません。</p>
+</main>
+
+<button id="fab-add" class="fab" aria-label="タスクを追加">＋</button>
+
+<nav class="bottom-nav">
+  <button class="nav-btn active" id="nav-today" data-view="today">
+    <span class="nav-icon">📋</span><span>タスク</span>
+  </button>
+  <button class="nav-btn" id="nav-completed" data-view="completed">
+    <span class="nav-icon">✅</span><span>完了済み</span>
+  </button>
+</nav>
+
+<div id="add-sheet" class="sheet-backdrop" hidden>
+  <div class="sheet">
+    <h2>新しいタスク</h2>
+    <form id="add-form">
+      <input type="text" id="input-title" class="text-input" placeholder="タスク名を入力" autocomplete="off" required>
+
+      <div class="detail-fields">
+        <label class="field-label">締切日（任意）
+          <input type="date" id="input-due">
+        </label>
+        <label class="field-label">優先度（任意）
+          <select id="input-priority">
+            <option value="">指定なし</option>
+            <option value="high">高</option>
+            <option value="mid">中</option>
+            <option value="low">低</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="sheet-actions">
+        <button type="button" id="cancel-add" class="btn-secondary">キャンセル</button>
+        <button type="submit" class="btn-primary">登録</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="edit-sheet" class="sheet-backdrop" hidden>
+  <div class="sheet">
+    <h2>タスクを編集</h2>
+    <form id="edit-form">
+      <input type="text" id="edit-title" class="text-input" placeholder="タスク名を入力" autocomplete="off" required>
+
+      <div class="detail-fields">
+        <label class="field-label">締切日（任意）
+          <input type="date" id="edit-due">
+        </label>
+        <label class="field-label">優先度（任意）
+          <select id="edit-priority">
+            <option value="">指定なし</option>
+            <option value="high">高</option>
+            <option value="mid">中</option>
+            <option value="low">低</option>
+          </select>
+        </label>
+      </div>
+
+      <div class="sheet-actions">
+        <button type="button" id="cancel-edit" class="btn-secondary">キャンセル</button>
+        <button type="submit" class="btn-primary">保存</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+
+<script src="script.js"></script>
+</body>
+</html>
