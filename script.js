@@ -106,6 +106,34 @@
     return b.createdAt - a.createdAt;
   }
 
+  function compareFiltered(a, b) {
+    if (a.completed !== b.completed) return a.completed ? 1 : -1;
+    if (!a.completed) return compareActiveTasks(a, b);
+    return compareCompletedTasks(a, b);
+  }
+
+  // ===== Search / Filter =====
+
+  function getFilterState() {
+    return {
+      keyword: els.searchInput.value.trim(),
+      status: els.filterStatus.value, // "active" | "completed" | "all"
+      period: els.filterPeriod.value, // "all" | "today" | "thisWeek" | "later"
+    };
+  }
+
+  function isDefaultFilter(filters) {
+    return filters.keyword === "" && filters.status === "active" && filters.period === "all";
+  }
+
+  function taskMatchesFilters(task, filters, today, endOfWeek) {
+    if (filters.status === "active" && task.completed) return false;
+    if (filters.status === "completed" && !task.completed) return false;
+    if (filters.period !== "all" && sectionForTask(task, today, endOfWeek) !== filters.period) return false;
+    if (filters.keyword && !task.title.toLowerCase().includes(filters.keyword.toLowerCase())) return false;
+    return true;
+  }
+
   // ===== Rendering =====
 
   const els = {
@@ -121,6 +149,13 @@
     sectionLater: document.querySelector('.task-section[data-section="later"]'),
     emptyHint: document.getElementById("empty-hint"),
     emptyHintCompleted: document.getElementById("empty-hint-completed"),
+    searchInput: document.getElementById("search-input"),
+    filterStatus: document.getElementById("filter-status"),
+    filterPeriod: document.getElementById("filter-period"),
+    clearFiltersBtn: document.getElementById("clear-filters"),
+    listFiltered: document.getElementById("list-filtered"),
+    filterResultCount: document.getElementById("filter-result-count"),
+    emptyHintFiltered: document.getElementById("empty-hint-filtered"),
   };
 
   function buildTaskMenu(items) {
@@ -230,10 +265,7 @@
     return li;
   }
 
-  function render() {
-    const today = todayStr();
-    const endOfWeek = endOfWeekStr();
-
+  function renderSections(today, endOfWeek) {
     const active = state.tasks.filter((t) => !t.completed);
     const buckets = { today: [], thisWeek: [], later: [] };
     for (const task of active) {
@@ -259,11 +291,53 @@
     els.sectionLater.hidden = buckets.later.length === 0;
 
     els.emptyHint.hidden = active.length !== 0;
+  }
 
+  function renderFiltered(filters, today, endOfWeek) {
+    const filtered = state.tasks
+      .filter((t) => taskMatchesFilters(t, filters, today, endOfWeek))
+      .sort(compareFiltered);
+
+    els.listFiltered.innerHTML = "";
+    filtered.forEach((t) => {
+      els.listFiltered.appendChild(t.completed ? buildCompletedItem(t) : buildTaskItem(t, today, endOfWeek));
+    });
+
+    els.filterResultCount.textContent = filtered.length ? `${filtered.length}件` : "";
+    els.emptyHintFiltered.hidden = filtered.length !== 0;
+  }
+
+  function renderCompletedList() {
     const completed = state.tasks.filter((t) => t.completed).sort(compareCompletedTasks);
     els.listCompleted.innerHTML = "";
     completed.forEach((t) => els.listCompleted.appendChild(buildCompletedItem(t)));
     els.emptyHintCompleted.hidden = completed.length !== 0;
+  }
+
+  function render() {
+    const today = todayStr();
+    const endOfWeek = endOfWeekStr();
+    const filters = getFilterState();
+    const useDefault = isDefaultFilter(filters);
+
+    els.clearFiltersBtn.hidden = useDefault;
+
+    if (useDefault) {
+      renderSections(today, endOfWeek);
+      els.listFiltered.hidden = true;
+      els.filterResultCount.hidden = true;
+      els.emptyHintFiltered.hidden = true;
+    } else {
+      els.sectionToday.hidden = true;
+      els.sectionThisWeek.hidden = true;
+      els.sectionLater.hidden = true;
+      els.emptyHint.hidden = true;
+      els.listFiltered.hidden = false;
+      els.filterResultCount.hidden = false;
+      renderFiltered(filters, today, endOfWeek);
+    }
+
+    renderCompletedList();
   }
 
   // ===== Toast =====
@@ -429,35 +503,36 @@
     return state.tasks.find((t) => t.id === li.dataset.id) || null;
   }
 
-  [els.listToday, els.listThisWeek, els.listLater].forEach((list) => {
-    list.addEventListener("click", (e) => {
-      const task = findTaskFromEvent(e);
-      if (!task) return;
-      if (e.target.closest(".task-check")) {
-        completeTask(task);
-      } else if (e.target.closest(".menu-trigger")) {
-        toggleMenu(e.target.closest(".task-menu"));
-      } else if (e.target.closest(".menu-edit")) {
-        closeAllMenus();
-        openEditSheet(task);
-      } else if (e.target.closest(".menu-delete")) {
-        closeAllMenus();
-        deleteTask(task.id);
-      }
-    });
-  });
-
-  els.listCompleted.addEventListener("click", (e) => {
+  function handleTaskListClick(e) {
     const task = findTaskFromEvent(e);
     if (!task) return;
-    if (e.target.closest(".restore-btn")) {
+    if (e.target.closest(".task-check")) {
+      completeTask(task);
+    } else if (e.target.closest(".restore-btn")) {
       restoreTask(task);
     } else if (e.target.closest(".menu-trigger")) {
       toggleMenu(e.target.closest(".task-menu"));
+    } else if (e.target.closest(".menu-edit")) {
+      closeAllMenus();
+      openEditSheet(task);
     } else if (e.target.closest(".menu-delete")) {
       closeAllMenus();
       deleteTask(task.id);
     }
+  }
+
+  [els.listToday, els.listThisWeek, els.listLater, els.listCompleted, els.listFiltered].forEach((list) => {
+    list.addEventListener("click", handleTaskListClick);
+  });
+
+  els.searchInput.addEventListener("input", render);
+  els.filterStatus.addEventListener("change", render);
+  els.filterPeriod.addEventListener("change", render);
+  els.clearFiltersBtn.addEventListener("click", () => {
+    els.searchInput.value = "";
+    els.filterStatus.value = "active";
+    els.filterPeriod.value = "all";
+    render();
   });
 
   // ===== Init =====

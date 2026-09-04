@@ -43,3 +43,7 @@ No backend and no auth screen — data storage should stay simple (要件定義.
 ## Testing / Verification
 
 Do not attempt to open, test, or verify the app in Chrome (or any browser) yourself, including via browser automation tools. The user will manually verify all changes in their own browser. After implementing a feature, simply report what was changed and what to check — do not try to launch or screenshot the app.
+
+## Workflow
+
+New features are developed one branch per feature (e.g. `feature/search-filter`, `feature/category`, `feature/calendar`). Do not mix unrelated feature work into a single branch or commit. Each feature is verified working (by the user, per the Testing / Verification rule above) before being merged into `main`.

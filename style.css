@@ -50,6 +50,50 @@ html, body {
   margin: 0 auto;
 }
 
+.search-filter-bar {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.search-input {
+  font-size: 16px;
+}
+
+.filter-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.filter-select {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  padding: 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.clear-filters-btn {
+  flex: none;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text-sub);
+  font-size: 13px;
+  padding: 9px 12px;
+  border-radius: 8px;
+}
+
+.filter-result-count {
+  font-size: 13px;
+  color: var(--color-text-sub);
+  margin: 0 0 8px 4px;
+}
+
 .task-section {
   margin-bottom: 20px;
 }

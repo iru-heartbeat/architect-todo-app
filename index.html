@@ -13,6 +13,24 @@
 </header>
 
 <main id="view-today" class="view">
+  <div class="search-filter-bar">
+    <input type="search" id="search-input" class="text-input search-input" placeholder="タスクを検索" autocomplete="off">
+    <div class="filter-row">
+      <select id="filter-status" class="filter-select">
+        <option value="active" selected>未完了</option>
+        <option value="completed">完了</option>
+        <option value="all">すべて</option>
+      </select>
+      <select id="filter-period" class="filter-select">
+        <option value="all" selected>すべての期間</option>
+        <option value="today">今日</option>
+        <option value="thisWeek">今週</option>
+        <option value="later">今週以降</option>
+      </select>
+      <button type="button" id="clear-filters" class="clear-filters-btn" hidden>クリア</button>
+    </div>
+  </div>
+
   <section class="task-section" data-section="today">
     <h2 class="section-title today">今日 <span class="count" id="count-today"></span></h2>
     <ul class="task-list" id="list-today"></ul>
@@ -29,6 +47,10 @@
   </section>
 
   <p class="empty-hint" id="empty-hint" hidden>タスクはありません。右下の「＋」から追加しましょう。</p>
+
+  <p class="filter-result-count" id="filter-result-count" hidden></p>
+  <ul class="task-list" id="list-filtered" hidden></ul>
+  <p class="empty-hint" id="empty-hint-filtered" hidden>該当するタスクがありません。</p>
 </main>
 
 <main id="view-completed" class="view" hidden>
